@@ -5,4 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 # flake8: noqa
-from .vq import QuantizedResult, ResidualVectorQuantizer
+from .vq import QuantizedResult, ResidualVectorQuantizer, LFQuantizer

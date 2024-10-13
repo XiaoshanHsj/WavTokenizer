@@ -14,7 +14,7 @@ import torch
 from torch import nn
 
 from .core_vq import ResidualVectorQuantization,LanguageVectorQuantization
-
+from .lookup_free_quantization import LFQ
 
 @dataclass
 class QuantizedResult:
@@ -24,6 +24,59 @@ class QuantizedResult:
     penalty: tp.Optional[torch.Tensor] = None
     metrics: dict = field(default_factory=dict)
 
+class LFQuantizer(nn.Module):
+    """LFQ
+    Args:
+        dimension (int): Dimension of the codebooks,
+        bin (long): Codebook size.
+        n_q (int): Number of residual vector quantizers used.
+        sample_minimization_weight (float):
+        batch_maximization_weight (float):
+        token_factorization (bool):
+    """
+    def __init__(
+        self,
+        dimension = 512,
+        bins = 2**18,
+        n_q = 1,
+        sample_minimization_weight=1.0,
+        batch_maximization_weight=1.0,
+        token_factorization = False,
+    ):
+        super().__init__()
+        self.n_q = n_q
+        self.dimension = dimension
+        self.bins = bins
+        self.sample_minimization_weight = sample_minimization_weight
+        self.batch_maximization_weight = batch_maximization_weight
+        self.token_factorization = token_factorization
+        
+        self.vq = LFQ(
+            dim = self.dimension,
+            codebook_size = self.bins,
+            num_codebooks = self.n_q,
+            sample_minimization_weight=self.sample_minimization_weight,
+            batch_maximization_weight=self.batch_maximization_weight,
+            token_factorization = self.token_factorization,
+        )
+    
+    def forward(self, x: torch.Tensor, frame_rate: int, bandwidth: tp.Optional[float] = None) -> QuantizedResult:
+        bw_per_q = 0
+        n_q = 1
+        quantized, loss, codes = self.vq(x)
+        bw = torch.tensor(n_q * bw_per_q).to(x)
+        return QuantizedResult(quantized, codes, bw, penalty=torch.mean(loss))
+
+    def infer(self, x: torch.Tensor, frame_rate: int, bandwidth: tp.Optional[float] = None) -> QuantizedResult:
+        return self(x, frame_rate, bandwidth)
+
+    def encode(self, x: torch.Tensor, frame_rate: int, bandwidth: tp.Optional[float] = None) -> torch.Tensor:
+        quantized, loss, codes = self.vq(x)
+        return codes
+
+    def decode(self, codes: torch.Tensor) -> torch.Tensor:
+        quantized = self.vq.decode(codes)
+        return quantized
 
 class ResidualVectorQuantizer(nn.Module):
     """Residual Vector Quantizer.
