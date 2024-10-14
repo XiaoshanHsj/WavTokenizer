@@ -462,6 +462,7 @@ class WavTokenizer(VocosExp):
         return output
 
     def validation_epoch_end(self, outputs):
+        '''
         if self.global_rank == 0:
             *_, audio_in, _ = outputs[0].values()
             # Resynthesis with encodec for reference
@@ -470,5 +471,6 @@ class WavTokenizer(VocosExp):
             self.logger.experiment.add_audio(
                 "encodec", encodec_audio[0, 0].data.cpu().numpy(), self.global_step, self.hparams.sample_rate,
             )
+        '''
 
         super().validation_epoch_end(outputs)
