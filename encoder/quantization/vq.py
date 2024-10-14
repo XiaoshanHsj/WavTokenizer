@@ -76,8 +76,8 @@ class LFQuantizer(nn.Module):
 
     def decode(self, codes: torch.Tensor, bdc) -> torch.Tensor:
         quant_z = self.vq.get_codebook_entry(codes, bdc)
-        import pdb; pdb.set_trace()
         x = self.vq.decode(quant_z)
+        import pdb; pdb.set_trace()
         return x
 
 class ResidualVectorQuantizer(nn.Module):
