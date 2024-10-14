@@ -115,7 +115,7 @@ class EncodecFeatures(FeatureExtractor):
         quantized = q_res.quantized
         codes = q_res.codes
         loss = q_res.penalty                 # codes(8,16,75),features(16,128,75)
-
+        import pdb; pdb.set_trace()
         return quantized, codes, loss
 
         # codes = self.get_encodec_codes(audio)
