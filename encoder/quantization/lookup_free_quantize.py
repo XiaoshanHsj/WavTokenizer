@@ -220,7 +220,7 @@ class LFQ(Module):
             A longtensor of codebook indices, containing values from
             0 to self.codebook_size
         """
-        x = x.to(torch.int32)
+        # x = x.to(torch.int32)
         x = self.indices_to_bits(x)
         # to some sort of float
         x = x.to(self.dtype)

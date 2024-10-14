@@ -75,10 +75,7 @@ class LFQuantizer(nn.Module):
         return codes
 
     def decode(self, codes: torch.Tensor, bdc) -> torch.Tensor:
-        assert codes.dtype in (torch.long, torch.int32)
-
-        quantized = self.vq.indices_to_bits(codes)
-        x = self.vq.get_codebook_entry(quantized, bdc)
+        x = self.vq.decode(codes)
         
         return x
 
