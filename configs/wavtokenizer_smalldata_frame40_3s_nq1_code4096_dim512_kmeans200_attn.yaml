@@ -18,7 +18,7 @@ data:
       num_workers: 8
 
 model:
-  class_path: decoder.experiment.WavTokenizer
+  class_path: decoder.experiment_LFQ.WavTokenizer
   init_args:
     sample_rate: 24000
     initial_learning_rate: 2e-4
@@ -37,7 +37,7 @@ model:
     resume_model: ./version_3/checkpoints/xxx.ckpt
 
     feature_extractor:
-      class_path: decoder.feature_extractors.EncodecFeatures
+      class_path: decoder.feature_extractors_LFQ.EncodecFeatures
       init_args:
         encodec_model: encodec_24khz
         bandwidths: [6.6, 6.6, 6.6, 6.6]
