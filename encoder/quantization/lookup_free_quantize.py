@@ -170,7 +170,7 @@ class LFQ(Module):
     @property
     def dtype(self):
         return self.codebook.dtype
-    
+
     def indices_to_bits(self, x):
         """
         x: long tensor of indices for constructing codebook, but actually not utilized in all the experiments.
