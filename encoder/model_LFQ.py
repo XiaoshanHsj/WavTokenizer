@@ -169,6 +169,7 @@ class EncodecModel_LFQ(nn.Module):
         Note that the output might be a bit bigger than the input. In that case,
         any extra steps at the end can be trimmed.
         """
+        import pdb; pdb.set_trace()
         segment_length = self.segment_length
         if segment_length is None:
             assert len(encoded_frames) == 1
@@ -178,6 +179,7 @@ class EncodecModel_LFQ(nn.Module):
         return _linear_overlap_add(frames, self.segment_stride or 1)
 
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
+        import pdb; pdb.set_trace()
         codes, scale = encoded_frame
         codes = codes.transpose(0, 1)
         emb = self.quantizer.decode(codes)
@@ -188,7 +190,6 @@ class EncodecModel_LFQ(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         frames = self.encode(x)
-        import pdb; pdb.set_trace()
         return self.decode(frames)[:, :, :x.shape[-1]]
 
     def set_target_bandwidth(self, bandwidth: float):
