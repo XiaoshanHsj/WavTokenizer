@@ -14,7 +14,7 @@ import torch
 from torch import nn
 
 from .core_vq import ResidualVectorQuantization,LanguageVectorQuantization
-from .lookup_free_quantization import LFQ
+from .lookup_free_quantize import LFQ
 
 @dataclass
 class QuantizedResult:
