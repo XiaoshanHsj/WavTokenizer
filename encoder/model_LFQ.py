@@ -145,6 +145,7 @@ class EncodecModel_LFQ(nn.Module):
         return encoded_frames
 
     def _encode_frame(self, x: torch.Tensor) -> EncodedFrame:
+        import pdb; pdb.set_trace()
         length = x.shape[-1]
         duration = length / self.sample_rate
         assert self.segment is None or duration <= 1e-5 + self.segment
