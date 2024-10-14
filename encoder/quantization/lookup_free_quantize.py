@@ -190,6 +190,7 @@ class LFQ(Module):
         else:
             mask = 2 ** torch.arange(self.codebook_dim-1, -1, -1, device=x.device, dtype=torch.long)
         
+        x = x.to(torch.int32)
         x = (x.unsqueeze(-1) & mask) != 0
         x = x * 2.0 - 1.0 #back to the float
         ## scale back to the desired shape
