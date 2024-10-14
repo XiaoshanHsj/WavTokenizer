@@ -7,7 +7,7 @@ data:
       filelist_path: data/demo.txt
       sampling_rate: 24000
       num_samples: 72000
-      batch_size: 40  # 20
+      batch_size: 5  # 20
       num_workers: 8
 
     val_params:
