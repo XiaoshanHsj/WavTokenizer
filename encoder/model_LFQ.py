@@ -159,11 +159,10 @@ class EncodecModel_LFQ(nn.Module):
             scale = None
 
         emb = self.encoder(x)
-        zshape = emb.shape
         codes = self.quantizer.encode(emb, self.frame_rate, self.bandwidth)
         # codes = codes.transpose(0, 1)
         # codes is [B, K, T], with T frames, K nb of codebooks.
-        return codes, scale, zshape
+        return codes, scale
 
     def decode(self, encoded_frames: tp.List[EncodedFrame]) -> torch.Tensor:
         """Decode the given frames into a waveform.
@@ -181,8 +180,8 @@ class EncodecModel_LFQ(nn.Module):
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
         codes, scale, zshape = encoded_frame
         # codes = codes.transpose(0, 1)
-        bdc = (zshape[0],zshape[2],18)
-        emb = self.quantizer.decode(codes, bdc)
+        emb = self.quantizer.decode(codes)
+        import pdb; pdb.set_trace()
         out = self.decoder(emb)
         if scale is not None:
             out = out * scale.view(-1, 1, 1)

@@ -227,7 +227,9 @@ class LFQ(Module):
         # -1 or 1
         x = x * 2 - 1
         import pdb; pdb.set_trace()
-        x = rearrange(x, "... NC Z-> ... (NC Z)")
+        # TODO
+        x = self.linear2(x)
+        # x = rearrange(x, "... NC Z-> ... (NC Z)")
         return x
 
     def forward(
