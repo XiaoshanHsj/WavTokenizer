@@ -159,11 +159,11 @@ class EncodecModel_LFQ(nn.Module):
             scale = None
 
         emb = self.encoder(x)
-        bhwc = emb.shape
+        zshape = emb.shape
         codes = self.quantizer.encode(emb, self.frame_rate, self.bandwidth)
         # codes = codes.transpose(0, 1)
         # codes is [B, K, T], with T frames, K nb of codebooks.
-        return codes, scale, bhwc
+        return codes, scale, zshape
 
     def decode(self, encoded_frames: tp.List[EncodedFrame]) -> torch.Tensor:
         """Decode the given frames into a waveform.
@@ -179,9 +179,10 @@ class EncodecModel_LFQ(nn.Module):
         return _linear_overlap_add(frames, self.segment_stride or 1)
 
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
-        codes, scale, bhwc = encoded_frame
+        codes, scale, zshape = encoded_frame
         # codes = codes.transpose(0, 1)
-        emb = self.quantizer.decode(codes, bhwc)
+        bdc = (zshape[0],zshape[2],zshape[1])
+        emb = self.quantizer.decode(codes, bdc)
         out = self.decoder(emb)
         if scale is not None:
             out = out * scale.view(-1, 1, 1)
