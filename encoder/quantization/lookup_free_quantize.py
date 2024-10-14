@@ -221,7 +221,6 @@ class LFQ(Module):
             0 to self.codebook_size
         """
         # x = x.to(torch.int32)
-        import pdb; pdb.set_trace()
         x = self.indices_to_bits(x)
         # to some sort of float
         x = x.to(self.dtype)
