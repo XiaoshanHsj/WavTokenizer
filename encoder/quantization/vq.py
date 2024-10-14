@@ -75,9 +75,11 @@ class LFQuantizer(nn.Module):
         return codes
 
     def decode(self, codes: torch.Tensor, bdc) -> torch.Tensor:
-        quant_z = self.vq.get_codebook_entry(codes, bdc)
-        x = self.vq.decode(quant_z)
-        import pdb; pdb.set_trace()
+        assert codes.dtype in (torch.long, torch.int32)
+
+        quantized = self.vq.indices_to_bits(codes)
+        x = self.vq.get_codebook_entry(quantized, bdc)
+        
         return x
 
 class ResidualVectorQuantizer(nn.Module):
