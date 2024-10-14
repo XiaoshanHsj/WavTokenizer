@@ -181,7 +181,7 @@ class EncodecModel_LFQ(nn.Module):
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
         codes, scale, zshape = encoded_frame
         # codes = codes.transpose(0, 1)
-        bdc = (zshape[0],zshape[2],zshape[1])
+        bdc = (zshape[0],zshape[2],18)
         emb = self.quantizer.decode(codes, bdc)
         out = self.decoder(emb)
         if scale is not None:
