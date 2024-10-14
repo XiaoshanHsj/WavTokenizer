@@ -226,7 +226,6 @@ class LFQ(Module):
         x = x.to(self.dtype)
         # -1 or 1
         x = x * 2 - 1
-        import pdb; pdb.set_trace()
         # TODO
         x = self.linear2(x)
         # x = rearrange(x, "... NC Z-> ... (NC Z)")
