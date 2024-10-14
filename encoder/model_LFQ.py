@@ -178,7 +178,7 @@ class EncodecModel_LFQ(nn.Module):
         return _linear_overlap_add(frames, self.segment_stride or 1)
 
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
-        codes, scale, zshape = encoded_frame
+        codes, scale = encoded_frame
         # codes = codes.transpose(0, 1)
         emb = self.quantizer.decode(codes)
         import pdb; pdb.set_trace()
