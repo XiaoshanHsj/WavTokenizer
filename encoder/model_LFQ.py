@@ -158,10 +158,9 @@ class EncodecModel_LFQ(nn.Module):
         else:
             scale = None
 
-        import pdb; pdb.set_trace()
         emb = self.encoder(x)
         codes = self.quantizer.encode(emb, self.frame_rate, self.bandwidth)
-        codes = codes.transpose(0, 1)
+        # codes = codes.transpose(0, 1)
         # codes is [B, K, T], with T frames, K nb of codebooks.
         return codes, scale
 
@@ -189,6 +188,7 @@ class EncodecModel_LFQ(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         frames = self.encode(x)
+        import pdb; pdb.set_trace()
         return self.decode(frames)[:, :, :x.shape[-1]]
 
     def set_target_bandwidth(self, bandwidth: float):
