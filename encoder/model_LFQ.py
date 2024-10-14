@@ -17,7 +17,7 @@ from torch import nn
 from . import quantization as qt
 from . import modules as m
 from .utils import _check_checksum, _linear_overlap_add, _get_checkpoint_url
-
+from einops import rearrange, reduce, pack, unpack
 
 ROOT_URL = 'https://dl.fbaipublicfiles.com/encodec/v0/'
 
