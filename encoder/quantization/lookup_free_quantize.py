@@ -194,7 +194,7 @@ class LFQ(Module):
         ## scale back to the desired shape
         b, d, c = bdc
         # x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
-        x = rearrange(x, "(b d) c -> b c d")
+        x = rearrange(x, "(b d) c -> b c d", d=d, c=c)
         return x
 
     def bits_to_indices(self, bits):
