@@ -182,7 +182,7 @@ class LFQ(Module):
         x = (x.unsqueeze(-1) & mask) != 0
         return x
 
-    def get_codebook_entry(self, x, bdc):
+    def get_codebook_entry(self, x, bhwc):
         import pdb; pdb.set_trace()
         if self.token_factorization:
             k = self.codebook_dim // 2
@@ -190,11 +190,10 @@ class LFQ(Module):
         else:
             mask = 2 ** torch.arange(self.codebook_dim-1, -1, -1, device=x.device, dtype=torch.long)
         
-        x = x.to(torch.int32)
         x = (x.unsqueeze(-1) & mask) != 0
         x = x * 2.0 - 1.0 #back to the float
         ## scale back to the desired shape
-        b, d, c = bdc
+        b, h, w, c = bhwc
         x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
         x = rearrange(x, "b h w c -> b c h w")
         return x
