@@ -183,7 +183,6 @@ class LFQ(Module):
         return x
 
     def get_codebook_entry(self, x, bdc):
-        import pdb; pdb.set_trace()
         if self.token_factorization:
             k = self.codebook_dim // 2
             mask = 2 ** torch.arange(k - 1, -1, -1, device=x.device, dtype=torch.long)
