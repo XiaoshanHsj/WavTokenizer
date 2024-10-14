@@ -244,7 +244,7 @@ class LFQ(Module):
         """
         import pdb; pdb.set_trace()
         # x = rearrange(x, 'b d t -> b t d')
-        # x = rearrange(x, 'b d ... -> b ... d')
+        x = rearrange(x, 'b d ... -> b ... d')
         # x, ps = pack_one(x, 'b * d')
         x = self.linear1(x)
 
