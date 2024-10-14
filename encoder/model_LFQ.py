@@ -65,7 +65,7 @@ class LMModel(nn.Module):
         return torch.softmax(logits, dim=1), states, offset
 
 
-class EncodecModel(nn.Module):
+class EncodecModel_LFQ(nn.Module):
     """EnCodec model operating on the raw waveform.
     Args:
         target_bandwidths (list of float): Target bandwidths.
@@ -234,7 +234,7 @@ class EncodecModel(nn.Module):
             n_q=n_q,
             bins=2**18,
         )
-        model = EncodecModel(
+        model = EncodecModel_LFQ(
             encoder,
             decoder,
             quantizer,
@@ -270,12 +270,12 @@ class EncodecModel(nn.Module):
         checkpoint_name = 'encodec_24khz-d7cc33bc.th'
         sample_rate = 24_000
         channels = 1
-        model = EncodecModel._get_model(
+        model = EncodecModel_LFQ._get_model(
             target_bandwidths, sample_rate, channels,
             causal=True, model_norm='weight_norm', audio_normalize=False,
             name='encodec_24khz' if pretrained else 'unset')
         if pretrained:
-            state_dict = EncodecModel._get_pretrained(checkpoint_name, repository)
+            state_dict = EncodecModel_LFQ._get_pretrained(checkpoint_name, repository)
             model.load_state_dict(state_dict)
         model.eval()
         return model
@@ -290,12 +290,12 @@ class EncodecModel(nn.Module):
         checkpoint_name = 'encodec_48khz-7e698e3e.th'
         sample_rate = 48_000
         channels = 2
-        model = EncodecModel._get_model(
+        model = EncodecModel_LFQ._get_model(
             target_bandwidths, sample_rate, channels,
             causal=False, model_norm='time_group_norm', audio_normalize=True,
             segment=1., name='encodec_48khz' if pretrained else 'unset')
         if pretrained:
-            state_dict = EncodecModel._get_pretrained(checkpoint_name, repository)
+            state_dict = EncodecModel_LFQ._get_pretrained(checkpoint_name, repository)
             model.load_state_dict(state_dict)
         model.eval()
         return model
@@ -306,8 +306,8 @@ def test():
     import torchaudio
     bandwidths = [3, 6, 12, 24]
     models = {
-        'encodec_24khz': EncodecModel.encodec_model_24khz,
-        'encodec_48khz': EncodecModel.encodec_model_48khz
+        'encodec_24khz': EncodecModel_LFQ.encodec_model_24khz,
+        'encodec_48khz': EncodecModel_LFQ.encodec_model_48khz
     }
     for model_name, bw in product(models.keys(), bandwidths):
         model = models[model_name]()

@@ -6,7 +6,7 @@ from torch import nn
 import math
 from decoder.modules import safe_log
 from encoder.modules import SEANetEncoder, SEANetDecoder
-from encoder import EncodecModel
+from encoder import EncodecModel_LFQ
 from encoder.quantization import ResidualVectorQuantizer, LFQuantizer
 
 
@@ -82,7 +82,7 @@ class EncodecFeatures(FeatureExtractor):
         quantizer = LFQuantizer(dimension=512, n_q=n_q, bins=vq_bins)
         # breakpoint()
         if encodec_model == "encodec_24khz":
-            self.encodec = EncodecModel(encoder=encoder, decoder=decoder, quantizer=quantizer,
+            self.encodec = EncodecModel_LFQ(encoder=encoder, decoder=decoder, quantizer=quantizer,
                                         target_bandwidths=bandwidths, sample_rate=24000, channels=1)
         else:
             raise ValueError(
