@@ -109,7 +109,7 @@ class EncodecFeatures(FeatureExtractor):
         audio = audio.unsqueeze(1)                  # audio(16,24000)
 
         # breakpoint()
-
+        import pdb; pdb.set_trace()
         emb = self.encodec.encoder(audio)
         q_res = self.encodec.quantizer(emb, self.frame_rate, bandwidth=self.bandwidths[bandwidth_id])
         quantized = q_res.quantized
