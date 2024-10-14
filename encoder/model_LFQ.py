@@ -172,7 +172,7 @@ class EncodecModel_LFQ(nn.Module):
         segment_length = self.segment_length
         if segment_length is None:
             assert len(encoded_frames) == 1
-            return self._decode_frame(encoded_frames[0])
+            return self._decode_frame(encoded_frames[0], bhwc)
 
         frames = [self._decode_frame(frame, bhwc) for frame in encoded_frames]
         return _linear_overlap_add(frames, self.segment_stride or 1)
