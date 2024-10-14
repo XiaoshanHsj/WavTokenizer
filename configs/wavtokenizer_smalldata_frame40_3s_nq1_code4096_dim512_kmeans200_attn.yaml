@@ -14,7 +14,7 @@ data:
       filelist_path: data/demo.txt
       sampling_rate: 24000
       num_samples: 72000
-      batch_size: 2   # 10
+      batch_size: 5   # 10
       num_workers: 8
 
 model:
