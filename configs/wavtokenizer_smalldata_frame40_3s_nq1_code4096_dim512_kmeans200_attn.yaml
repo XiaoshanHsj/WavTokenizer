@@ -4,14 +4,14 @@ data:
   class_path: decoder.dataset.VocosDataModule
   init_args:
     train_params:
-      filelist_path: ./WavTokenizer/data/train/libritts_train
+      filelist_path: ./WavTokenizer/data/demo.txt
       sampling_rate: 24000
       num_samples: 72000
       batch_size: 40  # 20
       num_workers: 8
 
     val_params:
-      filelist_path: ./WavTokenizer/data/infer/librttts_val
+      filelist_path: ./WavTokenizer/data/demo.txt
       sampling_rate: 24000
       num_samples: 72000
       batch_size: 5   # 10
