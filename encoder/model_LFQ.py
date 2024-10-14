@@ -159,12 +159,13 @@ class EncodecModel_LFQ(nn.Module):
             scale = None
 
         emb = self.encoder(x)
+        bhwc = emb.shape
         codes = self.quantizer.encode(emb, self.frame_rate, self.bandwidth)
         # codes = codes.transpose(0, 1)
         # codes is [B, K, T], with T frames, K nb of codebooks.
-        return codes, scale
+        return codes, scale, bhwc
 
-    def decode(self, encoded_frames: tp.List[EncodedFrame], bhwc) -> torch.Tensor:
+    def decode(self, encoded_frames: tp.List[EncodedFrame]) -> torch.Tensor:
         """Decode the given frames into a waveform.
         Note that the output might be a bit bigger than the input. In that case,
         any extra steps at the end can be trimmed.
@@ -172,13 +173,13 @@ class EncodecModel_LFQ(nn.Module):
         segment_length = self.segment_length
         if segment_length is None:
             assert len(encoded_frames) == 1
-            return self._decode_frame(encoded_frames[0], bhwc)
+            return self._decode_frame(encoded_frames[0])
 
-        frames = [self._decode_frame(frame, bhwc) for frame in encoded_frames]
+        frames = [self._decode_frame(frame) for frame in encoded_frames]
         return _linear_overlap_add(frames, self.segment_stride or 1)
 
-    def _decode_frame(self, encoded_frame: EncodedFrame, bhwc) -> torch.Tensor:
-        codes, scale = encoded_frame
+    def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
+        codes, scale, bhwc = encoded_frame
         # codes = codes.transpose(0, 1)
         emb = self.quantizer.decode(codes, bhwc)
         out = self.decoder(emb)
@@ -188,7 +189,7 @@ class EncodecModel_LFQ(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         frames = self.encode(x)
-        return self.decode(frames, x.shape)[:, :, :x.shape[-1]]
+        return self.decode(frames)[:, :, :x.shape[-1]]
 
     def set_target_bandwidth(self, bandwidth: float):
         if bandwidth not in self.target_bandwidths:
