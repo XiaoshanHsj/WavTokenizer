@@ -182,7 +182,7 @@ class LFQ(Module):
         x = (x.unsqueeze(-1) & mask) != 0
         return x
 
-    def get_codebook_entry(self, x, bdc):
+    def get_codebook_entry(self, x, bhwc):
         if self.token_factorization:
             k = self.codebook_dim // 2
             mask = 2 ** torch.arange(k - 1, -1, -1, device=x.device, dtype=torch.long)
@@ -192,9 +192,9 @@ class LFQ(Module):
         x = (x.unsqueeze(-1) & mask) != 0
         x = x * 2.0 - 1.0 #back to the float
         ## scale back to the desired shape
-        b, d, c = bdc
-        # x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
-        x = rearrange(x, "(b d) c -> b c d", d=d, c=c)
+        b, h, w, c = bhwc
+        x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
+        x = rearrange(x, "b h w c -> b c h w")
         return x
 
     def bits_to_indices(self, bits):

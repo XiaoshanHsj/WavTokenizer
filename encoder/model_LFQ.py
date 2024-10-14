@@ -182,7 +182,7 @@ class EncodecModel_LFQ(nn.Module):
         # codes = codes.transpose(0, 1)
         emb = self.quantizer.decode(codes)
         emb = rearrange(emb, '(b n) d -> b d n', n = emb.shape[0])
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         out = self.decoder(emb)
         if scale is not None:
             out = out * scale.view(-1, 1, 1)
