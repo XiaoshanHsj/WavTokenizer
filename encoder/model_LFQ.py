@@ -169,7 +169,6 @@ class EncodecModel_LFQ(nn.Module):
         Note that the output might be a bit bigger than the input. In that case,
         any extra steps at the end can be trimmed.
         """
-        import pdb; pdb.set_trace()
         segment_length = self.segment_length
         if segment_length is None:
             assert len(encoded_frames) == 1
