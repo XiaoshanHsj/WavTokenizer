@@ -180,7 +180,7 @@ class EncodecModel_LFQ(nn.Module):
     def _decode_frame(self, encoded_frame: EncodedFrame) -> torch.Tensor:
         import pdb; pdb.set_trace()
         codes, scale = encoded_frame
-        codes = codes.transpose(0, 1)
+        # codes = codes.transpose(0, 1)
         emb = self.quantizer.decode(codes)
         out = self.decoder(emb)
         if scale is not None:

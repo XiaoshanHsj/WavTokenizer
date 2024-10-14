@@ -220,6 +220,7 @@ class LFQ(Module):
             A longtensor of codebook indices, containing values from
             0 to self.codebook_size
         """
+        import pdb; pdb.set_trace()
         x = self.indices_to_bits(x)
         # to some sort of float
         x = x.to(self.dtype)
