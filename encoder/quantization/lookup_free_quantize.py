@@ -243,6 +243,7 @@ class LFQ(Module):
         c - number of codebook dim
         """
         import pdb; pdb.set_trace()
+        x = torch.randn(1, 32, 16)
         # x = rearrange(x, 'b d t -> b t d')
         x = rearrange(x, 'b d ... -> b ... d')
         # x, ps = pack_one(x, 'b * d')
