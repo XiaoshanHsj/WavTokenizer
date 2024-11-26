@@ -75,7 +75,8 @@ class LFQuantizer(nn.Module):
         return codes
 
     def decode(self, codes: torch.Tensor) -> torch.Tensor:
-        x = self.vq.decode(codes)
+        # x = self.vq.decode(codes)
+        x = self.vq.get_codebook_entry(codes, None)
         # import pdb; pdb.set_trace()
         return x
 
