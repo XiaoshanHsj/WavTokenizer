@@ -104,7 +104,7 @@ def entropy_loss(
         sample_entropy = masked_mean(sample_entropy, mask).mean()
     else:
         sample_entropy = torch.mean(sample_entropy)
-
+    # import pdb; pdb.set_trace()
     loss = (sample_minimization_weight * sample_entropy) - (
         batch_maximization_weight * avg_entropy
     )
@@ -119,8 +119,9 @@ class LFQ(Module):
         codebook_size = 2**18,
         num_codebooks = 1,
         sample_minimization_weight=1.0,
-        batch_maximization_weight=1.0,
+        batch_maximization_weight=0.1,
         token_factorization = False,
+        factorized_bits = [9, 9]
     ):
         super().__init__()
 
@@ -149,17 +150,18 @@ class LFQ(Module):
         # for no auxiliary loss, during inference
         self.token_factorization = token_factorization ## only utilized in second stage
         if not self.token_factorization: #for first stage model
-            self.register_buffer('mask', 2 ** torch.arange(self.codebook_dim - 1, -1, -1), persistent=False)
+            self.register_buffer('mask', 2 ** torch.arange(self.codebook_dim), persistent=False)
         else:
-            k = self.codebook_dim // 2
-            self.register_buffer("mask", 2 ** torch.arange(k - 1, -1, -1), persistent=False)
+            self.factorized_bits = factorized_bits
+            self.register_buffer("pre_mask", 2 ** torch.arange(factorized_bits[0]), persistent=False)
+            self.register_buffer("post_mask", 2**torch.arange(factorized_bits[1]), persistent=False)
 
         self.register_buffer('zero', torch.tensor(0.), persistent = False)
 
         # codes
         all_codes = torch.arange(codebook_size)
-        bits = self.indices_to_bits(all_codes)
-        codebook = bits * 2.0 - 1.0
+        bits = self.indices_to_bits(all_codes) # [2**codebook_dim, codebook_dim]
+        codebook = bits * 2.0 - 1.0 # to (-1, 1)
 
         self.register_buffer('codebook', codebook, persistent = False)
 
@@ -170,31 +172,38 @@ class LFQ(Module):
     @property
     def dtype(self):
         return self.codebook.dtype
-
+    
+    # returns big endian bits
     def indices_to_bits(self, x):
         """
         x: long tensor of indices for constructing codebook, but actually not utilized in all the experiments.
 
-        returns big endian bits
+        ***returns big endian bits***
         """
         mask = 2 ** torch.arange(self.codebook_dim, device=x.device, dtype=torch.long)
         # x is now big endian bits, the last dimension being the bits
         x = (x.unsqueeze(-1) & mask) != 0
         return x
 
-    def get_codebook_entry(self, x, bhwc):
+    # TODO
+    # 3 -> [-1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1., -1.,  1.,  1.]
+    def get_codebook_entry(self, x, order):
         if self.token_factorization:
-            k = self.codebook_dim // 2
-            mask = 2 ** torch.arange(k - 1, -1, -1, device=x.device, dtype=torch.long)
+            if order == "pre":
+                mask = 2 ** torch.arange(self.factorized_bits[0], device=x.device, dtype=torch.long)
+            else:
+                mask = 2 ** torch.arange(self.factorized_bits[1], device=x.device, dtype=torch.long)
         else:
-            mask = 2 ** torch.arange(self.codebook_dim-1, -1, -1, device=x.device, dtype=torch.long)
+            mask = 2 ** torch.arange(self.codebook_dim, device=x.device, dtype=torch.long)
         
         x = (x.unsqueeze(-1) & mask) != 0
         x = x * 2.0 - 1.0 #back to the float
         ## scale back to the desired shape
-        b, h, w, c = bhwc
-        x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
-        x = rearrange(x, "b h w c -> b c h w")
+        # b, d, c = bdc
+        # x = rearrange(x, "b (h w) c -> b h w c", h=h, w=w, c=c)
+        # x = rearrange(x, "b d c -> b c d")
+        if self.has_projections:
+            x = self.linear2(x)
         return x
 
     def bits_to_indices(self, bits):
@@ -220,20 +229,17 @@ class LFQ(Module):
             A longtensor of codebook indices, containing values from
             0 to self.codebook_size
         """
-        # x = x.to(torch.int32)
         x = self.indices_to_bits(x)
         # to some sort of float
         x = x.to(self.dtype)
         # -1 or 1
         x = x * 2 - 1
-        # TODO
-        x = self.linear2(x)
-        # x = rearrange(x, "... NC Z-> ... (NC Z)")
+        x = rearrange(x, "... NC Z-> ... (NC Z)")
         return x
 
     def forward(
         self,
-        x,
+        x,  # [B, T, D]
         return_loss_breakdown = False,
         mask = None,
         return_loss = True,
@@ -245,25 +251,19 @@ class LFQ(Module):
         d - feature dimension, which is also log2(codebook size)
         c - number of codebook dim
         """
-        # x = rearrange(x, 'b d t -> b t d')
         x = rearrange(x, 'b d ... -> b ... d')
-        # x, ps = pack_one(x, 'b * d')
-        x = self.linear1(x)
-
-        # split out number of codebooks
+        x, ps = pack_one(x, 'b * d')
 
         x = rearrange(x, 'b n (c d) -> b n c d', c = self.num_codebooks)
-
+        x = self.linear1(x)
 
         codebook_value = torch.Tensor([1.0]).to(device=x.device, dtype=x.dtype)
         quantized = torch.where(x > 0, codebook_value, -codebook_value) # higher than 0 filled 
 
         # calculate indices
         if self.token_factorization:
-            k = self.codebook_dim // 2
-            indices_pre = reduce((quantized[..., :k] > 0).int() * self.mask.int(), "b n c d -> b n c", "sum")
-            indices_post = reduce((quantized[..., k:] > 0).int() * self.mask.int(), "b n c d -> b n c", "sum")
-            # indices_post = 2**k + indices_post #shifter to the 1024
+            indices_pre = reduce((quantized[..., :self.factorized_bits[0]] > 0).int() * self.pre_mask.int(), "b n c d -> b n c", "sum")
+            indices_post = reduce((quantized[..., self.factorized_bits[0]:] > 0).int() * self.post_mask.int(), "b n c d -> b n c", "sum")
         else:
             indices = reduce((quantized > 0).int() * self.mask.int(), 'b n c d -> b n c', 'sum')
 
@@ -318,7 +318,7 @@ class LFQ(Module):
 
         # reconstitute image or video dimensions
 
-        # quantized = unpack_one(quantized, ps, 'b * d')
+        quantized = unpack_one(quantized, ps, 'b * d')
         quantized = rearrange(quantized, 'b ... d -> b d ...')
 
         
@@ -329,7 +329,7 @@ class LFQ(Module):
             indices_post = indices_post.flatten()
             indices = (indices_pre, indices_post)
         else:
-            # indices = unpack_one(indices, ps, 'b * c')
+            indices = unpack_one(indices, ps, 'b * c')
             indices = indices.flatten()
 
         # loss = 0.25 * commit_loss + 0.1 * entropy_aux_loss
@@ -341,3 +341,11 @@ class LFQ(Module):
             return ret
 
         return ret, LossBreakdown(per_sample_entropy, codebook_entropy, commit_loss, avg_probs)
+
+
+# lfq = LFQ()
+# # x = torch.randint(low=0, high=200000, size=(2, 3, 1), dtype=torch.int64)
+# # lfq.decode(x)
+
+# x = torch.randint(low=0, high=200000, size=(2, 3, 1), dtype=torch.int64)
+# lfq.get_codebook_entry(x, (2, 3))
